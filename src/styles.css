@@ -359,10 +359,17 @@ p { margin: 0; }
   font-size: 1.15rem;
 }
 
-.pips { display: flex; gap: 6px; }
+.pips {
+  display: flex;
+  gap: 6px;
+  max-width: 100%;
+}
 
 .pips i {
+  flex: 1 1 42px;
   width: 42px;
+  max-width: 42px;
+  min-width: 0;
   height: 12px;
   background: #fff;
   border: 3px solid var(--ink);
@@ -686,6 +693,14 @@ p { margin: 0; }
 @media (max-width: 719px) {
   .b-class-button { font-size: 1.25rem; padding: 14px 16px; }
   .chip--home span { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+  .progress { font-size: 1rem; }
+  .pips:has(i:nth-child(4)) { width: 100%; }
+  .pips:has(i:nth-child(4)) i {
+    flex-basis: 0;
+    width: auto;
+    max-width: none;
+    height: 14px;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {

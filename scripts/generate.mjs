@@ -9,6 +9,7 @@ import {
   kindLabel,
   quizHref,
   quizzes,
+  resultBounds,
   resultHref,
   resultsOf,
   site,
@@ -177,7 +178,7 @@ function card(quiz, { feature = false, stamps = [] } = {}) {
     <h3>${esc(quiz.title)}</h3>
     <p class="card__blurb">${esc(quiz.blurb)}</p>
     <p class="card__tags">${tagHtml}</p>
-    <p class="card__meta"><span>${esc(formatHot(quiz.hot))} 뇌절</span><span>시작하기</span></p>
+    <p class="card__meta"><span>${esc(formatHot(quiz.hot))} 참여</span><span>시작하기</span></p>
   </a>`
 }
 
@@ -192,7 +193,7 @@ function header() {
 function footer() {
   return `<footer class="site-footer">
     <p>타로 · ${esc(site.domain)}</p>
-    <p>재미용 뇌절이다. 결과는 내일 아침이면 효력 없음.</p>
+    <p>재미로 보는 테스트다. 결과는 내일 아침이면 효력 없음.</p>
     <p>글꼴 Gmarket Sans · Gmarket</p>
   </footer>`
 }
@@ -322,7 +323,7 @@ for (const quiz of quizzes) {
     const payload = {
       id: quiz.id,
       questions: quiz.questions,
-      results: quiz.results.map(({ id, score }) => ({ id, score })),
+      results: quiz.results.map((result) => ({ id: result.id, ...resultBounds(result) })),
     }
     write(
       out(quizHref(quiz)),
@@ -394,7 +395,7 @@ for (const quiz of quizzes) {
           <p class="meter">${esc(result.meter)}</p>
           <p class="summary">${esc(result.summary)}</p>
           <div class="comment">
-            <p class="comment__label">뇌절 코멘트</p>
+            <p class="comment__label">한 줄 코멘트</p>
             <p>${esc(result.comment)}</p>
           </div>
         </div>
@@ -434,10 +435,10 @@ const tagButtons = [
     (tag) => `<button type="button" class="tag-button" data-tag="${tag.id}" aria-pressed="false">#${esc(tag.label)}</button>`,
   ),
 ].join("")
-const ticker = "※ 과학 아님 ※ 세 문제면 끝 ※ 결과는 내일 아침 무효 ※ 친구 단톡에 던질 것 ※ 편의점 야식은 진지하게 ※ 퇴사각은 재미로만 ※ "
+const ticker = "※ 과학 아님 ※ 퀴즈는 3~5문제 ※ 결과는 내일 아침 무효 ※ 친구 단톡에 던질 것 ※ 편의점 야식은 진지하게 ※ 퇴사각은 재미로만 ※ "
 const home = shell({
   title: "타로 — 심심하면 뇌 끄는 테스트장",
-  description: "병맛 전투력, 카톡 답장 속도, 점심 결정장애, 편의점 야식 월드컵. 세 문제면 끝나고, 결과는 공유하라고 만들었다.",
+  description: "병맛 전투력, 카톡 답장 속도, 점심 결정장애, 편의점 야식 월드컵. 퀴즈는 3~5문제, 결과는 공유하라고 만들었다.",
   path: "/",
   image: homeImage,
   script: "/src/home.js",
@@ -449,12 +450,12 @@ const home = shell({
       <p class="hero__domain">${esc(site.domain)}</p>
       <h1>타로</h1>
       <p class="hero__tagline">${esc(site.tagline)}</p>
-      <p class="hero__desc">퀴즈는 세 문제, 월드컵은 8강. 카톡으로 들어와도 다른 테스트가 옆에 붙어 있다.</p>
+      <p class="hero__desc">퀴즈는 3~5문제, 월드컵은 8강. 카톡으로 들어와도 다른 테스트가 옆에 붙어 있다.</p>
     </div>
   </section>
   <section>
     <div class="section-head">
-      <h2>뇌절 테스트 진열장</h2>
+      <h2>테스트 진열장</h2>
       <p>인기순으로 깔아 뒀다. 태그로 걸러도 되고, 최신만 봐도 된다.</p>
     </div>
     <div class="controls">
@@ -481,8 +482,8 @@ write(
     robots: "noindex",
     main: `<section class="miss">
       <p class="stamp stamp--result">실종</p>
-      <h1>이 주소는 뇌절하다 증발했다.</h1>
-      <p>테스트는 홈 진열장에 있다. 세 문제면 끝난다.</p>
+      <h1>이 주소는 장난치다 증발했다.</h1>
+      <p>테스트는 홈 진열장에 있다. 퀴즈는 3~5문제면 끝난다.</p>
       <div class="actions"><a class="b-class-button" href="/">🏠 홈으로</a></div>
     </section>`,
   }),
