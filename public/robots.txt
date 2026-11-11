@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://taro.mymallow.cloud/sitemap.xml
