@@ -194,6 +194,11 @@ function footer() {
   return `<footer class="site-footer">
     <p>타로 · ${esc(site.domain)}</p>
     <p>재미로 보는 테스트다. 결과는 내일 아침이면 효력 없음.</p>
+    <nav class="site-footer__links" aria-label="안내">
+      <a href="/about.html">어바웃</a>
+      <a href="/privacy.html">개인정보 처리방침</a>
+      <a href="/terms.html">이용약관</a>
+    </nav>
     <p>글꼴 Gmarket Sans · Gmarket</p>
   </footer>`
 }
@@ -296,7 +301,7 @@ for (const quiz of quizzes) {
   const quizSize = quizLines.length > 1 ? 58 : 72
   const quizImage = saveImage(
     poster({
-      kicker: quiz.kind === "worldcup" ? "월드컵" : "테스트",
+      kicker: quiz.kind === "worldcup" ? "월드컵" : "퀴즈",
       corner: kindLabel(quiz),
       lines: quizLines,
       size: quizSize,
@@ -314,7 +319,7 @@ for (const quiz of quizzes) {
     <h1>${esc(quiz.title)}</h1>
     <p class="lede">${esc(quiz.blurb)}</p>
     <div id="stage" class="stage" aria-live="polite">
-      <p>질문을 꺼내는 중이다. 이 문장이 남으면 스크립트가 막힌 것이다.</p>
+      <p>질문을 준비하고 있어요.</p>
     </div>
     <p class="fineprint"><button type="button" class="text-button" id="restart">처음부터 다시</button></p>
   </article>`
@@ -438,7 +443,7 @@ const tagButtons = [
 const ticker = "※ 과학 아님 ※ 퀴즈는 3~5문제 ※ 결과는 내일 아침 무효 ※ 친구 단톡에 던질 것 ※ 편의점 야식은 진지하게 ※ 퇴사각은 재미로만 ※ "
 const home = shell({
   title: "타로 — 심심하면 뇌 끄는 테스트장",
-  description: "병맛 전투력, 카톡 답장 속도, 점심 결정장애, 편의점 야식 월드컵. 퀴즈는 3~5문제, 결과는 공유하라고 만들었다.",
+  description: "병맛 전투력, 카톡 답장 속도, 점심 결정장애, 편의점 야식 월드컵. 퀴즈는 3~5문제, 결과는 친구에게 공유해 보세요.",
   path: "/",
   image: homeImage,
   script: "/src/home.js",
@@ -450,13 +455,13 @@ const home = shell({
       <p class="hero__domain">${esc(site.domain)}</p>
       <h1>타로</h1>
       <p class="hero__tagline">${esc(site.tagline)}</p>
-      <p class="hero__desc">퀴즈는 3~5문제, 월드컵은 8강. 카톡으로 들어와도 다른 테스트가 옆에 붙어 있다.</p>
+      <p class="hero__desc">퀴즈는 3~5문제, 월드컵은 8강. 심심할 때 가볍게 골라 보세요.</p>
     </div>
   </section>
   <section>
     <div class="section-head">
       <h2>테스트 진열장</h2>
-      <p>인기순으로 깔아 뒀다. 태그로 걸러도 되고, 최신만 봐도 된다.</p>
+      <p>많이 하는 것부터 모아 뒀어요. 태그로 골라 보거나, 새로 나온 것부터 봐도 좋아요.</p>
     </div>
     <div class="controls">
       <div class="sorts" role="tablist" aria-label="정렬">
@@ -466,7 +471,7 @@ const home = shell({
       <div class="tags">${tagButtons}</div>
     </div>
     <div class="grid" id="gallery">${gallery}</div>
-    <p id="empty" class="empty" hidden>이 태그로는 아직 재고가 없다. 전체를 다시 열어라.</p>
+    <p id="empty" class="empty" hidden>이 태그에는 아직 테스트가 없어요. 전체를 다시 눌러 주세요.</p>
   </section>`,
 })
 write(join(root, "index.html"), home)
@@ -488,6 +493,72 @@ write(
     </section>`,
   }),
 )
+
+const infoPages = [
+  {
+    path: "/about.html",
+    title: "어바웃 | 타로",
+    description: "타로는 마이멜로(MyMallow)가 운영하는 심심풀이 퀴즈 사이트입니다.",
+    main: `<section class="miss doc">
+      <p class="stamp stamp--result">안내</p>
+      <h1>어바웃</h1>
+      <p>타로는 마이멜로(MyMallow)가 운영하는 심심풀이 사이트입니다. 짧은 퀴즈와 월드컵으로 장난스러운 결과를 보여 주고, 그 결과를 카카오톡으로 나눠 볼 수 있습니다.</p>
+      <p>결과는 오락을 위한 것입니다. 성격, 진로, 건강, 인간관계를 판단하거나 예측하지 않습니다.</p>
+      <h2>운영</h2>
+      <p>마이멜로 (MyMallow)</p>
+      <p>문의 연락처는 이 사이트에 따로 공개되어 있지 않습니다.</p>
+    </section>`,
+  },
+  {
+    path: "/privacy.html",
+    title: "개인정보 처리방침 | 타로",
+    description: "타로는 회원가입 없이 이용하는 오락 사이트입니다. 답변은 브라우저 안에서만 계산됩니다.",
+    main: `<section class="miss doc">
+      <p class="stamp stamp--result">안내</p>
+      <h1>개인정보 처리방침</h1>
+      <p>타로는 마이멜로(MyMallow)가 운영하는 오락용 웹사이트입니다. 회원가입 없이 이용합니다. 아래는 사이트가 실제로 하는 일만 짧게 적었습니다. 2026년 11월 12일에 정리했습니다.</p>
+      <h2>수집과 저장</h2>
+      <p>퀴즈 답과 월드컵 선택은 결과 화면을 만들기 위해, 이용 중인 브라우저 안에서만 계산됩니다. 답변을 서버에 저장하지 않고, 계정도 만들지 않습니다.</p>
+      <h2>카카오톡 공유</h2>
+      <p>결과 화면에서 공유를 누르면 결과 제목, 짧은 문구, 이미지 주소, 페이지 주소가 기기의 공유 기능으로 넘어가거나 링크가 복사됩니다. 카카오톡 공유가 연결되어 있으면 같은 내용이 카카오톡 공유로 전달될 수 있습니다. 타로가 그 내용을 따로 보관하지는 않습니다.</p>
+      <h2>분석과 광고</h2>
+      <p>방문 통계를 위한 분석 도구나 광고는 넣어 두지 않았습니다.</p>
+      <h2>운영</h2>
+      <p>마이멜로 (MyMallow). 문의 연락처는 이 사이트에 따로 공개되어 있지 않습니다.</p>
+    </section>`,
+  },
+  {
+    path: "/terms.html",
+    title: "이용약관 | 타로",
+    description: "타로는 마이멜로(MyMallow)의 무료 오락 사이트입니다. 결과는 재미를 위한 것입니다.",
+    main: `<section class="miss doc">
+      <p class="stamp stamp--result">안내</p>
+      <h1>이용약관</h1>
+      <p>타로는 마이멜로(MyMallow)가 운영하는 무료 오락 사이트입니다. 퀴즈와 월드컵 결과는 재미를 위한 것이며, 사실의 판단이나 전문적인 조언이 아닙니다. 2026년 11월 12일에 정리했습니다.</p>
+      <h2>이용</h2>
+      <p>따로 가입하지 않고 볼 수 있습니다. 결과 링크를 친구에게 공유하는 것도 이용에 포함됩니다.</p>
+      <h2>결과</h2>
+      <p>결과는 언제든지 바뀌거나 내려갈 수 있습니다. 이 페이지는 법적 효력을 단정하는 계약서가 아니라, 사이트가 어떤 곳인지 알리는 안내입니다.</p>
+      <h2>운영</h2>
+      <p>마이멜로 (MyMallow). 문의 연락처는 이 사이트에 따로 공개되어 있지 않습니다.</p>
+    </section>`,
+  },
+]
+
+for (const info of infoPages) {
+  pages.push(info.path)
+  write(
+    out(info.path),
+    shell({
+      title: info.title,
+      description: info.description,
+      path: info.path,
+      image: homeImage,
+      script: "/src/page.js",
+      main: info.main,
+    }),
+  )
+}
 
 const urls = pages
   .map((path) => `  <url><loc>${site.url}${path === "/" ? "/" : path}</loc></url>`)
