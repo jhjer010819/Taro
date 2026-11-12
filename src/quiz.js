@@ -55,7 +55,7 @@ function choose(side) {
       return
     }
     const score = picks.filter((pick) => pick === "b").length
-    const result = data.results.find((item) => item.score === score)
+    const result = data.results.find((item) => score >= item.min && score <= item.max)
     if (!result) {
       stage.textContent = "결과를 찾지 못했다. 홈으로 돌아가라."
       return
