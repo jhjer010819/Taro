@@ -106,7 +106,7 @@ async function shareKakao(button) {
   }
 
   const ok = await copyText(`${payload.text}\n${payload.url}`)
-  showToast(ok ? "카톡에 붙여넣을 링크를 복사했다." : "복사가 막혀 있다. 주소창을 길게 눌러라.")
+  showToast(ok ? "카카오톡에 붙여넣을 링크를 복사했어요." : "복사하지 못했어요. 주소창의 링크를 길게 눌러 복사해 주세요.")
 }
 
 for (const button of document.querySelectorAll("[data-share]")) {
@@ -114,7 +114,7 @@ for (const button of document.querySelectorAll("[data-share]")) {
     if (button.dataset.share === "link") {
       const payload = sharePayload(button)
       const ok = await copyText(payload.url)
-      showToast(ok ? "링크 복사 완료. 단톡에 던져라." : "복사가 막혀 있다. 주소를 직접 복사해라.")
+      showToast(ok ? "링크를 복사했어요. 대화방에 붙여넣어 보세요." : "복사하지 못했어요. 주소창의 링크를 직접 복사해 주세요.")
       return
     }
     await shareKakao(button)
