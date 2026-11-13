@@ -76,7 +76,7 @@ const ogCount = readdirSync(join(root, "public/og")).filter((name) => name.endsW
 if (ogCount < 40) throw new Error(`expected posters, got ${ogCount}`)
 if (!statSync(join(root, "public/fonts/GmarketSansBold.woff")).size) throw new Error("font missing")
 
-const liveIds = ["power", "reply", "lunch", "quit", "group", "weekend", "trend", "snack-cup", "civil-type", "nasdaq-mental"]
+const liveIds = ["power", "reply", "lunch", "quit", "group", "weekend", "trend", "snack-cup", "civil-type", "nasdaq-mental", "money-leak"]
 if (quizzes.map((quiz) => quiz.id).join() !== liveIds.join()) {
   throw new Error(`quiz order changed: ${quizzes.map((quiz) => quiz.id).join(",")}`)
 }
