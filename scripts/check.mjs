@@ -5,6 +5,7 @@ import { fileURLToPath } from "node:url"
 import {
   assertContent,
   assertQuiz,
+  compareGallery,
   loadQuizDirectory,
   loadQuizFile,
   quizHref,
@@ -76,9 +77,27 @@ const ogCount = readdirSync(join(root, "public/og")).filter((name) => name.endsW
 if (ogCount < 40) throw new Error(`expected posters, got ${ogCount}`)
 if (!statSync(join(root, "public/fonts/GmarketSansBold.woff")).size) throw new Error("font missing")
 
-const liveIds = ["power", "reply", "lunch", "quit", "group", "weekend", "trend", "snack-cup", "civil-type", "nasdaq-mental", "money-leak", "lotto-dream"]
-if (quizzes.map((quiz) => quiz.id).join() !== liveIds.join()) {
-  throw new Error(`quiz order changed: ${quizzes.map((quiz) => quiz.id).join(",")}`)
+// Same rule as the site: compareGallery keeps the original tilt slots, then
+// orders every other file by published date and id. A new JSON file is enough.
+const quizDir = join(root, "src/quizzes")
+const quizNames = readdirSync(quizDir).filter((name) => name.endsWith(".json")).sort()
+const fromFiles = quizNames.map((name) => {
+  const where = `src/quizzes/${name}`
+  const quiz = loadQuizFile(join(quizDir, name), where)
+  const id = name.slice(0, -".json".length)
+  if (quiz.id !== id) throw new Error(`${where} id must match the filename`)
+  return quiz
+})
+const expected = [...fromFiles].sort(compareGallery).map((quiz) => quiz.id)
+const actual = quizzes.map((quiz) => quiz.id)
+if (expected.join() !== actual.join()) {
+  throw new Error(`quiz order changed: ${actual.join(",")}`)
+}
+const appearances = new Map()
+for (const id of actual) appearances.set(id, (appearances.get(id) ?? 0) + 1)
+for (const name of quizNames) {
+  const id = name.slice(0, -".json".length)
+  if (appearances.get(id) !== 1) throw new Error(`src/quizzes/${name} must appear exactly once`)
 }
 
 const sampleWhere = "scripts/fixtures/five-question.json"

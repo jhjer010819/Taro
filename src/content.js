@@ -30,7 +30,7 @@ function fail(where, message) {
   throw new Error(`${where}: ${message}`)
 }
 
-function compareGallery(a, b) {
+export function compareGallery(a, b) {
   const rank = (quiz) => {
     const index = galleryOrder.indexOf(quiz.id)
     return index === -1 ? galleryOrder.length : index

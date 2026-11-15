@@ -33,7 +33,7 @@ npm run check
 
 ## 테스트 추가하기
 
-새 테스트는 `src/quizzes/<id>.json` 하나만 추가하면 된다. 목록 파일은 고치지 않는다. `id`는 파일 이름과 같고, 빌드가 폴더를 직접 찾는다. JSON이 깨지거나 문항·점수가 비면 `npm run build`가 그 파일 이름을 에러에 남기고 멈춘다. 배포도 그 빌드라서 깨진 내용은 올라가지 않는다.
+새 테스트는 `src/quizzes/<id>.json` 하나만 추가하면 된다. 빌드와 `npm run check`는 그 폴더의 JSON으로 진열 순서를 계산하고, 파일마다 한 번씩만 들어갔는지 확인한다. `id`는 파일 이름과 같다. JSON이 깨지거나 문항·점수가 비면 `npm run build`가 그 파일 이름을 에러에 남기고 멈춘다. 배포도 그 빌드라서 깨진 내용은 올라가지 않는다.
 
 `kind`는 `quiz` 또는 `worldcup`이다.
 
@@ -156,17 +156,11 @@ npm run check
 
 ## taro.mymallow.cloud
 
-정적 사이트다. `render.yaml`이 Render 정적 사이트를 만들고 `taro.mymallow.cloud`를 붙이도록 되어 있다. 저장소가 GitHub, GitLab, Bitbucket에 올라간 뒤 [Render Blueprint](https://dashboard.render.com/blueprint/new)로 이 저장소를 연결하면 된다.
+정적 사이트다. `main`에 푸시하면 `.github/workflows/deploy-pages.yml`이 GitHub Actions에서 `npm ci`, `npm run build`, `npm run check`를 실행하고 `dist/`를 GitHub Pages에 배포한다. `gh-pages` 브랜치는 쓰지 않는다. 산출물에는 `CNAME`(`taro.mymallow.cloud`)과 `.nojekyll`이 들어간다.
 
-DNS는 Cloudflare에 있다. apex `mymallow.cloud`는 GitHub Pages를 가리키니 건드리지 않는다. `taro`만 추가한다.
+Pages 설정은 저장소 Settings → Pages → Source: GitHub Actions다.
 
-1. Render 서비스가 생기면 `onrender.com` 주소를 복사한다.
-2. Cloudflare → `mymallow.cloud` → DNS → 레코드 추가.
-3. 타입 CNAME, 이름 `taro`, 대상은 그 `onrender.com` 주소, 프록시는 DNS only(회색 구름).
-4. `taro`에 AAAA 레코드가 있으면 지운다.
-5. Render 대시보드 Custom Domains에서 Verify. 인증서가 발급된 뒤에만 주황 구름으로 바꿔도 된다.
-
-SSL/TLS 모드는 Full.
+DNS는 Cloudflare에 있다. apex `mymallow.cloud`는 GitHub Pages를 가리키니 그대로 둔다. `taro`는 CNAME으로 `jhjer010819.github.io`를 가리킨다.
 
 ## 글꼴
 
