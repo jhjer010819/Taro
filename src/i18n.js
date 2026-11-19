@@ -19,24 +19,24 @@ export const copy = {
     sortHot: "인기",
     sortNew: "최신",
     tagAll: "전체",
-    empty: "이 태그에는 아직 테스트가 없어요. 전체를 다시 눌러 주세요.",
-    preparing: "질문을 준비하고 있어요.",
+    empty: "이 태그엔 아직 없다. 전체 눌러 봐.",
+    preparing: "문제 꺼내는 중이다.",
     restart: "처음부터 다시",
     shareKakao: "카카오톡으로 공유",
     shareLink: "링크 공유하기",
     retry: "다시 하기",
-    more: "다른 재미있는 테스트 더보기",
+    more: "다른 테스트도 해보기",
     finalResult: "최종 결과",
-    commentLabel: "한 줄 코멘트",
-    footerNote: "재미로 보는 테스트다. 결과는 내일 아침이면 효력 없음.",
+    commentLabel: "한줄평",
+    footerNote: "재미로 보는 거다. 결과는 내일 아침이면 무효.",
     footerNav: "안내",
-    about: "어바웃",
+    about: "소개",
     privacy: "개인정보 처리방침",
     terms: "이용약관",
     fontCredit: "글꼴 Gmarket Sans · Gmarket",
-    kindCup: "월드컵 · 8강",
+    kindCup: "하나만 남을 때까지",
     kindQuiz(n) {
-      return `퀴즈 · ${n}문항`
+      return `딱 ${n}개만 고르면 끝`
     },
     shareText(quizTitle, resultTitle) {
       return `[타로] ${quizTitle}\n내 결과는 「${resultTitle}」.\n너도 해봐.`
@@ -46,24 +46,24 @@ export const copy = {
     kickerResult: "결과",
     kickerHome: "입장",
     cornerHome: "B급 인증",
-    homeTitle: "타로 — 심심하면 뇌 끄는 테스트장",
+    homeTitle: "타로 | 심심하면 뇌 끄는 테스트장",
     homeDescription:
-      "병맛 전투력, 카톡 답장 속도, 점심 결정장애, 편의점 야식 월드컵. 퀴즈는 3~5문제, 결과는 친구에게 공유해 보세요.",
+      "병맛 전투력, 카톡 답장, 점심 메뉴, 편의점 야식. 심심하면 하나 골라서 결과 카드 던져 봐.",
     ticker:
-      "※ 과학 아님 ※ 퀴즈는 3~5문제 ※ 결과는 내일 아침 무효 ※ 친구 단톡에 던질 것 ※ 편의점 야식은 진지하게 ※ 퇴사각은 재미로만 ※ ",
+      "※ 과학 아님 ※ 심심풀이용 ※ 결과는 내일 아침 무효 ※ 단톡에 던져 볼 것 ※ 편의점 야식은 진지함 ※ 퇴사각은 재미로만 ※ ",
     stampScience: "과학 아님",
     stampGrade: "B급 인증",
-    heroDesc: "퀴즈는 3~5문제, 월드컵은 8강. 심심할 때 가볍게 골라 보세요.",
-    galleryTitle: "테스트 진열장",
-    galleryDesc: "많이 하는 것부터 모아 뒀어요. 태그로 골라 보거나, 새로 나온 것부터 봐도 좋아요.",
+    heroDesc: "심심하면 아무거나 하나. 금방 끝난다.",
+    galleryTitle: "테스트 모아둠",
+    galleryDesc: "많이 한 것부터 올려 뒀다. 태그로 걸러도 되고, 새로 나온 것부터 봐도 된다.",
     unverified: "",
-    cupPrompt: "더 당기는 쪽을 찍어라.",
+    cupPrompt: "더 당기는 쪽을 찍어.",
     cupFinal: "결승",
     cupRoundTemplate: "{n}강",
-    missingResult: "결과를 찾지 못했어요. 홈에서 다시 시작해 주세요.",
+    missingResult: "결과를 못 찾았다. 홈에서 다시 해 봐.",
     tags: {
       power: "병맛전투력",
-      trend: "트렌드분석",
+      trend: "트렌드",
       bored: "심심풀이",
       people: "인간관계",
       food: "음식",
@@ -71,29 +71,29 @@ export const copy = {
     },
     client: {
       kakaoTry: "나도 해보기",
-      toastKakaoOk: "카카오톡에 붙여넣을 링크를 복사했어요.",
-      toastKakaoFail: "복사하지 못했어요. 주소창의 링크를 길게 눌러 복사해 주세요.",
-      toastLinkOk: "링크를 복사했어요. 대화방에 붙여넣어 보세요.",
-      toastLinkFail: "복사하지 못했어요. 주소창의 링크를 직접 복사해 주세요.",
+      toastKakaoOk: "카카오톡에 붙여넣을 링크 복사함.",
+      toastKakaoFail: "복사 못 함. 주소창 링크를 길게 눌러 복사해.",
+      toastLinkOk: "링크 복사함. 대화방에 붙여넣어.",
+      toastLinkFail: "복사 못 함. 주소창에서 직접 복사해.",
     },
     miss: {
       title: "증발한 주소 | 타로",
       description: "이 주소는 없다. 테스트는 홈에 있다.",
       stamp: "실종",
       heading: "이 주소는 장난치다 증발했다.",
-      body: "테스트는 홈 진열장에 있다. 퀴즈는 3~5문제면 끝난다.",
+      body: "테스트는 홈에 있다. 하나 고르면 금방 끝난다.",
       home: "홈으로",
     },
     infoPages: [
       {
         slug: "about",
-        title: "어바웃 | 타로",
-        description: "타로는 마이멜로(MyMallow)가 운영하는 심심풀이 퀴즈 사이트입니다.",
+        title: "소개 | 타로",
+        description: "타로는 마이멜로(MyMallow)가 운영하는 심심풀이 사이트입니다.",
         main: `<section class="miss doc">
       <p class="stamp stamp--result">안내</p>
-      <h1>어바웃</h1>
-      <p>타로는 마이멜로(MyMallow)가 운영하는 심심풀이 사이트입니다. 짧은 퀴즈와 월드컵으로 장난스러운 결과를 보여 주고, 그 결과를 카카오톡으로 나눠 볼 수 있습니다.</p>
-      <p>결과는 오락을 위한 것입니다. 성격, 진로, 건강, 인간관계를 판단하거나 예측하지 않습니다.</p>
+      <h1>소개</h1>
+      <p>타로는 마이멜로(MyMallow)가 운영하는 심심풀이 사이트입니다. 짧은 퀴즈랑 월드컵으로 엉뚱한 결과가 나오고, 그 결과를 카카오톡으로 보낼 수 있습니다.</p>
+      <p>결과는 재미용입니다. 성격, 진로, 건강, 사람 관계를 판단하거나 맞히지 않습니다.</p>
       <h2>운영</h2>
       <p>마이멜로 (MyMallow)</p>
       <p>문의 연락처는 이 사이트에 따로 공개되어 있지 않습니다.</p>
@@ -137,7 +137,7 @@ export const copy = {
   },
   en: {
     siteName: "Taro",
-    tagline: "Nonsense tests for the bored",
+    tagline: "Weird little tests for when you're bored",
     skip: "Skip to content",
     home: "Home",
     browse: "Browse tests",
@@ -153,23 +153,24 @@ export const copy = {
     sortNew: "New",
     tagAll: "All",
     empty: "Nothing with this tag yet. Hit All and keep scrolling.",
-    preparing: "Warming up the questions.",
+    preparing: "Grabbing the questions.",
     restart: "Start over",
     shareKakao: "Share to KakaoTalk",
     shareLink: "Copy link",
     retry: "Take it again",
     more: "More unhinged tests",
     finalResult: "Your result",
-    commentLabel: "The verdict",
-    footerNote: "For fun only. These results expire by morning.",
+    commentLabel: "The take",
+    footerNote: "Just for fun. Results expire by morning.",
     footerNav: "Info",
     about: "About",
     privacy: "Privacy",
     terms: "Terms",
     fontCredit: "Typeface: Gmarket Sans · Gmarket",
-    kindCup: "World Cup · 8 picks",
+    kindCup: "Until one's left",
     kindQuiz(n) {
-      return `Quiz · ${n} questions`
+      const word = ["", "", "", "Three", "Four", "Five"][n]
+      return `${word || n} and done`
     },
     shareText(quizTitle, resultTitle) {
       return `[Taro] ${quizTitle}\nI got "${resultTitle}".\nYour turn.`
@@ -179,25 +180,25 @@ export const copy = {
     kickerResult: "RESULT",
     kickerHome: "ENTER",
     cornerHome: "NOT SCIENCE",
-    homeTitle: "Taro — nonsense tests for the bored",
+    homeTitle: "Taro | weird little tests for when you're bored",
     homeDescription:
-      "K-culture nonsense tests. A few questions, a completely unverified result, and a card for the group chat.",
+      "Chaos, texting speed, lunch paralysis, late-night snacks. Grab one and send the card.",
     ticker:
-      "※ NOT SCIENCE ※ 100% UNVERIFIED ※ 3 TO 5 QUESTIONS ※ EXPIRES BY MORNING ※ SEND IT TO THE GROUP CHAT ※ ",
+      "※ NOT SCIENCE ※ FOR FUN ※ EXPIRES BY MORNING ※ DROP IT IN THE GROUP CHAT ※ SNACKS ARE SERIOUS ※ QUITTING IS A BIT ※ ",
     stampScience: "Not science",
     stampGrade: "Unverified",
-    heroDesc: "Quizzes are 3 to 5 questions. A world cup is a bracket of 8. Grab one when you are bored.",
-    galleryTitle: "The shelf",
-    galleryDesc: "Biggest crowds first. Filter with a tag, or start with whatever just dropped.",
+    heroDesc: "Bored? Pick one. It's over before the group chat moves on.",
+    galleryTitle: "The tests",
+    galleryDesc: "Most played first. Filter by a tag, or start with whatever just dropped.",
     unverified: "Not science, 100% unverified",
-    cupPrompt: "Tap the one you are craving.",
+    cupPrompt: "Tap the one you want.",
     cupFinal: "Final",
     cupRoundTemplate: "Round of {n}",
     missingResult: "Couldn't find a result. Head home and try again.",
     tags: {
-      power: "Chaos power",
+      power: "Chaos",
       trend: "Trends",
-      bored: "Boredom",
+      bored: "Bored",
       people: "People",
       food: "Food",
       work: "Work",
@@ -210,11 +211,11 @@ export const copy = {
       toastLinkFail: "Couldn't copy that. Grab the link from the address bar.",
     },
     miss: {
-      title: "This link evaporated | Taro",
-      description: "That address is not a thing. The tests are on the home page.",
+      title: "This page isn't here | Taro",
+      description: "That address isn't a thing. The tests are on the home page.",
       stamp: "Missing",
-      heading: "This link wandered off and evaporated.",
-      body: "The tests are on the home shelf. A quiz is 3 to 5 questions and you are done.",
+      heading: "This page isn't here.",
+      body: "The tests are on the home page. Pick one and you're done.",
       home: "Back home",
     },
     infoPages: [
@@ -225,7 +226,7 @@ export const copy = {
         main: `<section class="miss doc">
       <p class="stamp stamp--result">Note</p>
       <h1>About</h1>
-      <p>Taro is a just-for-fun site run by MyMallow. Short quizzes and snack brackets hand you a ridiculous result you can drop into a chat.</p>
+      <p>Taro is a just-for-fun site run by MyMallow. Short quizzes and goofy brackets hand you a ridiculous result you can drop in the group chat.</p>
       <p>The results are entertainment. They do not judge your personality, your job, your health, or your relationships.</p>
       <h2>Who runs this</h2>
       <p>MyMallow</p>

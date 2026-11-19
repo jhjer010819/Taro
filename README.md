@@ -1,6 +1,6 @@
 # 타로
 
-심심하면 뇌 끄는 테스트장. 퀴즈는 3~5문제, 편의점 야식 월드컵, 결과 카드, 그리고 끝나자마자 붙는 다른 테스트 세 장.
+심심하면 뇌 끄는 테스트장. 짧은 퀴즈, 편의점 야식 월드컵, 결과 카드, 그리고 끝나자마자 붙는 다른 테스트 세 장.
 
 주소는 [taro.mymallow.cloud](https://taro.mymallow.cloud). 영어 페이지는 [/en/](https://taro.mymallow.cloud/en/)이다. 한국어 주소는 그대로다.
 
@@ -69,7 +69,7 @@ npm run check
   "kind": "quiz",
   "title": "출근 가방 속도",
   "emoji": "🎒",
-  "blurb": "알람부터 책상까지. B를 고른 개수로 아침 속도가 갈린다.",
+  "blurb": "알람부터 책상까지. 아침 속도가 갈린다.",
   "tags": ["work", "bored"],
   "hot": 1200,
   "published": "2026-11-12",
@@ -86,7 +86,7 @@ npm run check
       "min": 0,
       "max": 1,
       "title": "이불 연장전",
-      "meter": "속도 12",
+      "meter": "이불 연장",
       "summary": "아침의 대부분을 이불한테 양보했다.",
       "comment": "지각 사유는 이미 머릿속에 있다."
     },
@@ -94,8 +94,8 @@ npm run check
       "id": "steady",
       "score": 2,
       "title": "보통 시계",
-      "meter": "속도 48",
-      "summary": "서두르지도 늦지도 않다. 엘리베이터가 오늘을 결정한다.",
+      "meter": "엘리베이터 결정",
+      "summary": "서두르지도 늦지도 않다. 엘리베이터가 오늘을 정한다.",
       "comment": "이 속도가 제일 오래간다."
     },
     {
@@ -103,7 +103,7 @@ npm run check
       "min": 3,
       "max": 4,
       "title": "성큼파",
-      "meter": "속도 80",
+      "meter": "발이 먼저",
       "summary": "발이 머리보다 빠르다. 신호등만 봐 준다.",
       "comment": "친구는 너보다 늦게 도착한다."
     },
@@ -111,8 +111,8 @@ npm run check
       "id": "blast",
       "score": 5,
       "title": "발사대",
-      "meter": "속도 99",
-      "summary": "다섯 장면 모두 먼저 움직였다. 물도 나중이다.",
+      "meter": "이미 도착",
+      "summary": "다섯 개 다 먼저 움직였다. 물도 나중이다.",
       "comment": "오늘은 이미 자리에 있다."
     }
   ]
@@ -127,19 +127,19 @@ npm run check
   "kind": "worldcup",
   "title": "책상 위 음료 이상형 월드컵",
   "emoji": "🥤",
-  "blurb": "8강 고정 대진. 더 당기는 잔이 오늘 오후를 정한다.",
+  "blurb": "더 당기는 잔이 오늘 오후를 정한다.",
   "tags": ["food", "work"],
   "hot": 800,
   "published": "2026-11-12",
   "fighters": [
     { "id": "americano", "emoji": "☕", "name": "아메리카노", "tease": "쓴맛으로 눈을 뜸", "title": "아메리카노 직진", "meter": "오후 연료", "summary": "메뉴판을 안 본다. 쓴맛이 일정이다.", "comment": "시럽 제안은 정중히 거절한다." },
-    { "id": "latte", "emoji": "🥛", "name": "카페라떼", "tease": "우유로 하루를 둥글리기", "title": "라떼 온기파", "meter": "오후 연료", "summary": "온도가 맞아야 일이 된다. 거품은 보너스다.", "comment": "디카페인도 라떼면 인정한다." },
+    { "id": "latte", "emoji": "🥛", "name": "카페라떼", "tease": "우유로 하루를 둥글게", "title": "라떼 온기파", "meter": "오후 연료", "summary": "온도가 맞아야 일이 된다. 거품은 보너스다.", "comment": "디카페인도 라떼면 인정한다." },
     { "id": "tea", "emoji": "🍵", "name": "녹차", "tease": "카페인인데 아닌 척", "title": "티백 한 장주의", "meter": "오후 연료", "summary": "향으로 집중한다. 커피 줄에서는 빠진다.", "comment": "두 장은 과속이라고 생각한다." },
     { "id": "cola", "emoji": "🥤", "name": "콜라", "tease": "단맛이 회의를 밀어줌", "title": "캔으로 버티기", "meter": "오후 연료", "summary": "탄산이 떨어지는 순간이 퇴근 신호다.", "comment": "얼음이 녹기 전에 끝낸다." },
     { "id": "ade", "emoji": "🍋", "name": "레몬에이드", "tease": "단짠이 아니라 단신", "title": "에이드로 환기", "meter": "오후 연료", "summary": "단맛이 필요하지만 커피는 거절이다.", "comment": "오후 세 시에 손이 간다." },
     { "id": "water", "emoji": "💧", "name": "생수", "tease": "선택을 선택하지 않음", "title": "물만 마시는 사람", "meter": "오후 연료", "summary": "갈증과 취향을 분리한다. 텀블러가 본인이다.", "comment": "회식 자리에서도 잔은 물이다." },
     { "id": "choco", "emoji": "🍫", "name": "초코우유", "tease": "점심이 부족했던 증거", "title": "초코로 보정", "meter": "오후 연료", "summary": "단맛이 식사가 된다. 죄책감은 다음 잔으로 미룬다.", "comment": "냉장고를 열 때 이미 결정되어 있다." },
-    { "id": "energy", "emoji": "⚡", "name": "에너지드링크", "tease": "한 캔에 야근 예약", "title": "캔으로 시간 벌기", "meter": "오후 연료", "summary": "졸음을 성분표로 이긴다. 효과는 짧고 자신감은 길다.", "comment": "두 캔째에서 손이 떨리면 내일은 물이다." }
+    { "id": "energy", "emoji": "⚡", "name": "에너지드링크", "tease": "한 캔에 야근 예약", "title": "캔으로 시간 벌기", "meter": "오후 연료", "summary": "졸음을 캔으로 이긴다. 효과는 짧고 자신감은 길다.", "comment": "두 캔째에서 손이 떨리면 내일은 물이다." }
   ]
 }
 ```

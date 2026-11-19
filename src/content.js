@@ -39,7 +39,7 @@ export function localeById(id) {
 
 export const tags = [
   { id: "power", label: "병맛전투력" },
-  { id: "trend", label: "트렌드분석" },
+  { id: "trend", label: "트렌드" },
   { id: "bored", label: "심심풀이" },
   { id: "people", label: "인간관계" },
   { id: "food", label: "음식" },
