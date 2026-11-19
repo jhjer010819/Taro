@@ -5,6 +5,29 @@ const toast = document.querySelector("[data-toast]")
 let toastTimer = 0
 let lastOpener = null
 
+function readCopy() {
+  const node = document.querySelector("#site-copy")
+  if (!node) return {}
+  try {
+    return JSON.parse(node.textContent)
+  } catch {
+    return {}
+  }
+}
+
+const copy = readCopy()
+const fallback = {
+  kakaoTry: "나도 해보기",
+  toastKakaoOk: "카카오톡에 붙여넣을 링크를 복사했어요.",
+  toastKakaoFail: "복사하지 못했어요. 주소창의 링크를 길게 눌러 복사해 주세요.",
+  toastLinkOk: "링크를 복사했어요. 대화방에 붙여넣어 보세요.",
+  toastLinkFail: "복사하지 못했어요. 주소창의 링크를 직접 복사해 주세요.",
+}
+
+function text(key) {
+  return copy[key] || fallback[key]
+}
+
 function showToast(message) {
   if (!toast) return
   toast.textContent = message
@@ -88,7 +111,7 @@ async function shareKakao(button) {
       },
       buttons: [
         {
-          title: "나도 해보기",
+          title: text("kakaoTry"),
           link: { mobileWebUrl: payload.url, webUrl: payload.url },
         },
       ],
@@ -106,7 +129,7 @@ async function shareKakao(button) {
   }
 
   const ok = await copyText(`${payload.text}\n${payload.url}`)
-  showToast(ok ? "카카오톡에 붙여넣을 링크를 복사했어요." : "복사하지 못했어요. 주소창의 링크를 길게 눌러 복사해 주세요.")
+  showToast(ok ? text("toastKakaoOk") : text("toastKakaoFail"))
 }
 
 for (const button of document.querySelectorAll("[data-share]")) {
@@ -114,7 +137,7 @@ for (const button of document.querySelectorAll("[data-share]")) {
     if (button.dataset.share === "link") {
       const payload = sharePayload(button)
       const ok = await copyText(payload.url)
-      showToast(ok ? "링크를 복사했어요. 대화방에 붙여넣어 보세요." : "복사하지 못했어요. 주소창의 링크를 직접 복사해 주세요.")
+      showToast(ok ? text("toastLinkOk") : text("toastLinkFail"))
       return
     }
     await shareKakao(button)

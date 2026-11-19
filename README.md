@@ -2,7 +2,7 @@
 
 심심하면 뇌 끄는 테스트장. 퀴즈는 3~5문제, 편의점 야식 월드컵, 결과 카드, 그리고 끝나자마자 붙는 다른 테스트 세 장.
 
-주소는 [taro.mymallow.cloud](https://taro.mymallow.cloud).
+주소는 [taro.mymallow.cloud](https://taro.mymallow.cloud). 영어 페이지는 [/en/](https://taro.mymallow.cloud/en/)이다. 한국어 주소는 그대로다.
 
 ## 로컬에서 보기
 
@@ -11,7 +11,7 @@ npm install
 npm run dev
 ```
 
-브라우저에서 `http://127.0.0.1:4731` 을 연다.
+브라우저에서 `http://127.0.0.1:4731` 을 연다. 영어는 `http://127.0.0.1:4731/en/`.
 
 ```bash
 npm run build
@@ -26,8 +26,11 @@ npm run check
 - `/` 인기·최신 정렬과 태그 필터가 있는 카드 진열장
 - `/quiz/quiz-*.html` 카톡으로 들어오는 플레이 페이지. 상단에 홈, 다른 테스트 구경하기
 - `/result/result-*.html` 결과 카드, 카카오톡·링크 공유, 다시 하기, 관련 테스트 3장
+- `/en/`, `/en/quiz/quiz-*.html`, `/en/result/result-*.html` 같은 구성의 영어 페이지. 번역이 있는 테스트만 영어 진열장에 나온다
 
-테스트는 `src/quizzes/<id>.json` 한 파일이다. `src/content.js`는 그 폴더의 JSON을 전부 읽는다. 파일을 넣고 `npm run dev` 또는 `npm run build`를 하면 HTML과 공유 이미지가 다시 만들어진다. 생성된 `index.html`, `quiz/`, `result/`는 직접 고치지 않는다.
+헤더의 한국어 / English는 같은 테스트가 있으면 그 페이지로, 없으면 그 언어의 홈으로 간다. 양쪽 다 있는 페이지는 `hreflang`로 서로를 가리킨다.
+
+테스트는 언어마다 JSON 하나다. 한국어는 `src/quizzes/<id>.json`, 영어는 `src/quizzes/en/<id>.json`. `src/content.js`가 언어별로 그 폴더의 JSON을 읽는다. 파일을 넣고 `npm run dev` 또는 `npm run build`를 하면 HTML과 공유 이미지가 다시 만들어진다. 생성된 `index.html`, `quiz/`, `result/`, `en/`은 직접 고치지 않는다.
 
 퀴즈 점수는 B를 고른 개수다. 3문제면 0~3, 5문제면 0~5. 결과마다 `score` 하나, 또는 `min`/`max` 범위를 적고, 0부터 문항 수까지를 빠짐없이 한 번씩 덮는다. 월드컵은 8강 고정 대진이다.
 
@@ -140,6 +143,25 @@ npm run check
   ]
 }
 ```
+
+## 번역 추가하기
+
+번역도 퀴즈마다 JSON 하나다. 스키마는 위의 한국어 예와 같다. 화면 문구(버튼, 공유, 메타)는 `src/i18n.js`에 있고, 퀴즈 본문만 파일로 나뉜다.
+
+영어 테스트를 넣을 때:
+
+1. 한국어 파일이 있으면 그 `id`를 그대로 쓴다. 영어에만 있는 테스트면 새 `id`를 만든다.
+2. `src/quizzes/en/<id>.json`을 만든다.
+3. 같은 `id`면 `kind`, 결과 `id`, 점수 범위(`score` 또는 `min`/`max`)가 한국어와 같아야 한다. 문항 수와 결과 수도 그렇게 맞춰진다. 문구만 그 언어로 적는다.
+4. `npm run build` 다음 `npm run check`.
+
+주소는 `/en/quiz/quiz-<id>.html`, 결과는 `/en/result/result-<id>-<결과 id>.html`이다. 사이트맵에도 들어간다. 공유 이미지는 영어 문구로 다시 그려진다.
+
+새 언어는 같은 방식으로 하나 더 붙인다.
+
+1. `src/content.js`의 `locales`에 항목을 추가한다. `id`는 폴더 이름, `prefix`는 `/ja` 같은 주소 앞부분, `htmlLang`과 `ogLocale`은 그 언어 코드, `label`은 헤더에 보일 이름이다. 첫 항목은 한국어이고 `prefix`가 비어 있다. 이 항목의 주소를 바꾸면 기존 링크가 깨진다.
+2. `src/i18n.js`의 `copy`에 같은 `id`로 화면 문구를 넣는다.
+3. `src/quizzes/<id>/<퀴즈 id>.json`을 넣는다.
 
 ## 공유
 

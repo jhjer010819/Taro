@@ -57,10 +57,10 @@ function choose(side) {
     const score = picks.filter((pick) => pick === "b").length
     const result = data.results.find((item) => score >= item.min && score <= item.max)
     if (!result) {
-      stage.textContent = "결과를 찾지 못했어요. 홈에서 다시 시작해 주세요."
+      stage.textContent = data.missingResult || "결과를 찾지 못했어요. 홈에서 다시 시작해 주세요."
       return
     }
-    window.location.href = `/result/result-${data.id}-${result.id}.html`
+    window.location.href = `${data.prefix || ""}/result/result-${data.id}-${result.id}.html`
   }, 220)
 }
 

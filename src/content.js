@@ -1,12 +1,40 @@
 import { readdirSync, readFileSync } from "node:fs"
 import { dirname, join } from "node:path"
 import { fileURLToPath } from "node:url"
+import { copyFor } from "./i18n.js"
 
 export const site = {
   name: "타로",
   domain: "taro.mymallow.cloud",
   url: "https://taro.mymallow.cloud",
   tagline: "심심하면 뇌 끄는 테스트장",
+}
+
+// First locale is the default and keeps the original URLs (empty prefix).
+// Another language is a folder under src/quizzes plus a matching copy block.
+export const locales = [
+  {
+    id: "ko",
+    htmlLang: "ko",
+    ogLocale: "ko_KR",
+    prefix: "",
+    label: "한국어",
+    dir: null,
+  },
+  {
+    id: "en",
+    htmlLang: "en",
+    ogLocale: "en_US",
+    prefix: "/en",
+    label: "English",
+    dir: "en",
+  },
+]
+
+export const defaultLocale = locales[0].id
+
+export function localeById(id) {
+  return locales.find((locale) => locale.id === id) ?? locales[0]
 }
 
 export const tags = [
@@ -90,30 +118,57 @@ export function loadQuizDirectory(dir, label) {
   return loaded
 }
 
-export const quizzes = loadQuizDirectory(quizDir, "src/quizzes")
+function loadLocaleQuizzes(locale) {
+  const dir = locale.dir ? join(quizDir, locale.dir) : quizDir
+  const label = locale.dir ? `src/quizzes/${locale.dir}` : "src/quizzes"
+  const loaded = loadQuizDirectory(dir, label)
+  for (const quiz of loaded) quiz.locale = locale.id
+  return loaded
+}
+
+export const quizzesByLocale = Object.fromEntries(locales.map((locale) => [locale.id, loadLocaleQuizzes(locale)]))
+
+export const quizzes = quizzesByLocale[defaultLocale]
+
+export function findQuiz(localeId, id) {
+  return quizzesByLocale[localeId]?.find((quiz) => quiz.id === id) ?? null
+}
 
 export function resultsOf(quiz) {
   return quiz.kind === "worldcup" ? quiz.fighters : quiz.results
 }
 
-export function quizHref(quiz) {
-  return `/quiz/quiz-${quiz.id}.html`
+export function homeHref(localeId = defaultLocale) {
+  const prefix = localeById(localeId).prefix
+  return prefix ? `${prefix}/` : "/"
 }
 
-export function resultHref(quiz, result) {
-  return `/result/result-${quiz.id}-${result.id}.html`
+export function quizHref(quiz, localeId = quiz?.locale || defaultLocale) {
+  return `${localeById(localeId).prefix}/quiz/quiz-${quiz.id}.html`
 }
 
-export function kindLabel(quiz) {
-  if (quiz.kind === "worldcup") return "월드컵 · 8강"
-  return `퀴즈 · ${quiz.questions.length}문항`
+export function resultHref(quiz, result, localeId = quiz?.locale || defaultLocale) {
+  return `${localeById(localeId).prefix}/result/result-${quiz.id}-${result.id}.html`
 }
 
-export function tagLabel(id) {
-  return tags.find((tag) => tag.id === id)?.label ?? id
+export function kindLabel(quiz, localeId = quiz?.locale || defaultLocale) {
+  const strings = copyFor(localeId)
+  if (quiz.kind === "worldcup") return strings.kindCup
+  return strings.kindQuiz(quiz.questions.length)
 }
 
-export function formatHot(n) {
+export function tagLabel(id, localeId = defaultLocale) {
+  return copyFor(localeId).tags?.[id] ?? tags.find((tag) => tag.id === id)?.label ?? id
+}
+
+export function formatHot(n, localeId = defaultLocale) {
+  if (localeId !== "ko") {
+    if (n >= 1000) {
+      const thousands = Math.round((n / 1000) * 10) / 10
+      return `${thousands.toFixed(1).replace(/\.0$/, "")}k`
+    }
+    return new Intl.NumberFormat("en-US").format(n)
+  }
   if (n >= 10000) {
     const man = Math.round((n / 10000) * 10) / 10
     return `${man.toFixed(1).replace(/\.0$/, "")}만`
@@ -235,15 +290,63 @@ export function assertQuiz(quiz, where = quizSource(quiz)) {
   }
 }
 
-export function assertContent() {
-  if (quizzes.length < 4) throw new Error("src/quizzes: need a gallery, not a single test")
-  const ids = new Set()
-  for (const quiz of quizzes) {
-    const where = quizSource(quiz)
-    assertQuiz(quiz, where)
-    if (ids.has(quiz.id)) fail(where, `duplicate quiz ${quiz.id}`)
-    ids.add(quiz.id)
+function resultMap(quiz) {
+  if (quiz.kind === "worldcup") return quiz.fighters.map((fighter) => fighter.id).join(",")
+  return quiz.results
+    .map((result) => {
+      const { min, max } = resultBounds(result)
+      return `${result.id}:${min}-${max}`
+    })
+    .join(",")
+}
+
+function assertQuizFolders() {
+  let entries
+  try {
+    entries = readdirSync(quizDir, { withFileTypes: true })
+  } catch (error) {
+    fail("src/quizzes", error.message)
   }
+  const known = new Set(locales.map((locale) => locale.dir).filter(Boolean))
+  for (const entry of entries) {
+    if (!entry.isDirectory()) continue
+    if (known.has(entry.name)) continue
+    const names = readdirSync(join(quizDir, entry.name)).filter((name) => name.endsWith(".json"))
+    if (names.length) fail(`src/quizzes/${entry.name}`, "folder is not a registered locale in src/content.js")
+  }
+}
+
+function assertTranslations() {
+  const base = quizzesByLocale[defaultLocale]
+  for (const locale of locales) {
+    if (locale.id === defaultLocale) continue
+    copyFor(locale.id)
+    for (const quiz of quizzesByLocale[locale.id]) {
+      const original = base.find((item) => item.id === quiz.id)
+      if (!original) continue
+      const where = quizSource(quiz)
+      if (original.kind !== quiz.kind) fail(where, `kind must match ${quizSource(original)}`)
+      if (resultMap(original) !== resultMap(quiz)) {
+        fail(where, `result ids and score ranges must match ${quizSource(original)}`)
+      }
+    }
+  }
+}
+
+export function assertContent() {
+  assertQuizFolders()
+  if (quizzes.length < 4) throw new Error("src/quizzes: need a gallery, not a single test")
+  for (const locale of locales) {
+    copyFor(locale.id)
+    const ids = new Set()
+    for (const quiz of quizzesByLocale[locale.id]) {
+      const where = quizSource(quiz)
+      assertQuiz(quiz, where)
+      if (ids.has(quiz.id)) fail(where, `duplicate quiz ${quiz.id}`)
+      ids.add(quiz.id)
+    }
+  }
+  assertTranslations()
 }
 
 assertContent()

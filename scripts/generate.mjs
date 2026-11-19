@@ -5,10 +5,15 @@ import { fileURLToPath } from "node:url"
 import { Resvg } from "@resvg/resvg-js"
 import {
   assertContent,
+  defaultLocale,
+  findQuiz,
   formatHot,
+  homeHref,
   kindLabel,
+  localeById,
+  locales,
   quizHref,
-  quizzes,
+  quizzesByLocale,
   resultBounds,
   resultHref,
   resultsOf,
@@ -16,6 +21,7 @@ import {
   tagLabel,
   tags,
 } from "../src/content.js"
+import { copyFor } from "../src/i18n.js"
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "..")
 const fontFile = join(root, "scripts/fonts/GmarketSansBold.otf")
@@ -46,8 +52,24 @@ function chars(value) {
   return [...String(value)]
 }
 
+function isMostlyLatin(text) {
+  let latin = 0
+  let hangul = 0
+  for (const ch of String(text)) {
+    if (/[A-Za-z]/.test(ch)) latin += 1
+    else if (/[\uac00-\ud7af]/.test(ch)) hangul += 1
+  }
+  return latin > hangul
+}
+
+function lineMax(text, cjkMax) {
+  if (!isMostlyLatin(text)) return cjkMax
+  return Math.max(cjkMax, 34)
+}
+
 function wrapTitle(title, max = 10) {
-  if (chars(title).length <= max + 1) return [title]
+  const limit = isMostlyLatin(title) ? Math.max(max, 22) : max
+  if (chars(title).length <= limit + 1) return [title]
   if (!title.includes(" ")) {
     const all = chars(title)
     const mid = Math.ceil(all.length / 2)
@@ -57,7 +79,7 @@ function wrapTitle(title, max = 10) {
   let current = ""
   for (const word of title.split(" ")) {
     const next = current ? `${current} ${word}` : word
-    if (chars(next).length > max && current) {
+    if (chars(next).length > limit && current) {
       lines.push(current)
       current = word
     } else {
@@ -82,6 +104,40 @@ function wrapByWidth(text, max) {
   }
   if (current) lines.push(current)
   return lines
+}
+
+function quizPosterLayout(lines) {
+  if (lines.length >= 3) return { size: 50, firstY: 208, blurbY: 420 }
+  if (lines.length > 1) return { size: 58, firstY: 250, blurbY: 400 }
+  return { size: 72, firstY: 280, blurbY: 360 }
+}
+
+function resultPosterLayout(lines) {
+  if (lines.length >= 3) return { size: 46, firstY: 200 }
+  if (lines.length > 1) return { size: 58, firstY: 236 }
+  return { size: 76, firstY: 286 }
+}
+
+function fitCorner(text) {
+  const max = isMostlyLatin(text) ? 22 : 32
+  const all = chars(text)
+  if (all.length <= max) return text
+  if (!String(text).includes(" ")) return all.slice(0, max).join("")
+  let current = ""
+  for (const word of String(text).split(" ")) {
+    const next = current ? `${current} ${word}` : word
+    if ([...next].length > max) break
+    current = next
+  }
+  return current || all.slice(0, max).join("")
+}
+
+function cornerFontSize(text) {
+  const count = chars(text).length
+  if (!isMostlyLatin(text) && count <= 24) return 28
+  if (count <= 18) return 28
+  if (count <= 26) return 22
+  return 18
 }
 
 function hash(value) {
@@ -144,7 +200,7 @@ function poster({ kicker, corner, lines, size, firstY, meter, blurbLines, blurbY
   <rect x="28" y="28" width="1144" height="574" fill="#fffdf8" stroke="#141414" stroke-width="14"/>
   <rect x="70" y="72" width="196" height="58" fill="#ff007f" stroke="#141414" stroke-width="6" transform="rotate(-3 168 101)"/>
   <text x="168" y="110" text-anchor="middle" font-family="Gmarket Sans" font-size="28" font-weight="700" fill="#141414">${xml(kicker)}</text>
-  <text x="1090" y="112" text-anchor="end" font-family="Gmarket Sans" font-size="28" font-weight="700" fill="#141414">${xml(corner)}</text>
+  <text x="1090" y="112" text-anchor="end" font-family="Gmarket Sans" font-size="${cornerFontSize(corner)}" font-weight="700" fill="#141414">${xml(corner)}</text>
   ${headlines}
   ${meterMarkup}
   ${blurbs}
@@ -153,8 +209,8 @@ function poster({ kicker, corner, lines, size, firstY, meter, blurbLines, blurbY
 </svg>`
 }
 
-function relatedTo(quiz) {
-  return quizzes
+function relatedTo(quiz, list) {
+  return list
     .filter((other) => other.id !== quiz.id)
     .map((other) => ({
       other,
@@ -165,73 +221,123 @@ function relatedTo(quiz) {
     .map((row) => row.other)
 }
 
-function card(quiz, { feature = false, stamps = [] } = {}) {
-  const tilt = tilts[quizzes.findIndex((item) => item.id === quiz.id) % tilts.length]
+function card(quiz, list, locale, t, { feature = false, stamps = [] } = {}) {
+  const tilt = tilts[list.findIndex((item) => item.id === quiz.id) % tilts.length]
   const stampHtml = stamps
-    .map((stamp) => `<span class="mini-stamp${stamp === "최신" ? " mini-stamp--new" : ""}">${stamp}</span>`)
+    .map((stamp) => `<span class="mini-stamp${stamp === t.stampNew ? " mini-stamp--new" : ""}">${esc(stamp)}</span>`)
     .join("")
-  const tagHtml = quiz.tags.map((id) => `<span>#${esc(tagLabel(id))}</span>`).join("")
-  return `<a class="card${feature ? " card--feature" : ""}" href="${quizHref(quiz)}" data-hot="${quiz.hot}" data-date="${quiz.published}" data-tags="${quiz.tags.join(",")}" style="--tilt:${tilt}deg">
+  const tagHtml = quiz.tags.map((id) => `<span>#${esc(tagLabel(id, locale.id))}</span>`).join("")
+  return `<a class="card${feature ? " card--feature" : ""}" href="${quizHref(quiz, locale.id)}" data-hot="${quiz.hot}" data-date="${quiz.published}" data-tags="${quiz.tags.join(",")}" style="--tilt:${tilt}deg">
     <div class="card__stamps">${stampHtml}</div>
     <p class="card__emoji">${quiz.emoji}</p>
-    <p class="card__kind">${esc(kindLabel(quiz))}</p>
+    <p class="card__kind">${esc(kindLabel(quiz, locale.id))}</p>
     <h3>${esc(quiz.title)}</h3>
     <p class="card__blurb">${esc(quiz.blurb)}</p>
     <p class="card__tags">${tagHtml}</p>
-    <p class="card__meta"><span>${esc(formatHot(quiz.hot))} 참여</span><span>시작하기</span></p>
+    <p class="card__meta"><span>${esc(formatHot(quiz.hot, locale.id))} ${esc(t.played)}</span><span>${esc(t.start)}</span></p>
   </a>`
 }
 
-function header() {
+function pageExists(localeId, page) {
+  if (page.type === "home" || page.type === "info") return true
+  if (page.type === "quiz") return Boolean(findQuiz(localeId, page.id))
+  if (page.type === "result") {
+    const quiz = findQuiz(localeId, page.id)
+    return Boolean(quiz && resultsOf(quiz).some((result) => result.id === page.resultId))
+  }
+  return false
+}
+
+function resolvePage(localeId, page) {
+  if (page.type === "home" || page.type === "miss") return homeHref(localeId)
+  if (page.type === "info") return `${localeById(localeId).prefix}/${page.slug}.html`
+  const quiz = findQuiz(localeId, page.id)
+  if (!quiz) return homeHref(localeId)
+  if (page.type === "quiz") return quizHref(quiz, localeId)
+  const result = resultsOf(quiz).find((item) => item.id === page.resultId)
+  if (!result) return quizHref(quiz, localeId)
+  return resultHref(quiz, result, localeId)
+}
+
+function alternateLinks(page) {
+  const ready = locales.filter((locale) => pageExists(locale.id, page))
+  if (ready.length < 2) return ""
+  const tagsForPage = ready.map((locale) => {
+    const href = `${site.url}${resolvePage(locale.id, page)}`
+    return `<link rel="alternate" hreflang="${locale.htmlLang}" href="${esc(href)}" />`
+  })
+  const fallback = `${site.url}${resolvePage(defaultLocale, page)}`
+  tagsForPage.push(`<link rel="alternate" hreflang="x-default" href="${esc(fallback)}" />`)
+  return tagsForPage.join("\n  ")
+}
+
+function langSwitch(locale, t, page) {
+  const parts = locales.map((item) => {
+    if (item.id === locale.id) return `<span aria-current="true">${esc(item.label)}</span>`
+    const href = resolvePage(item.id, page)
+    return `<a href="${esc(href)}" hreflang="${item.htmlLang}" lang="${item.htmlLang}">${esc(item.label)}</a>`
+  })
+  return `<nav class="lang-switch" aria-label="${esc(t.langLabel)}">${parts.join('<span class="lang-switch__slash" aria-hidden="true">/</span>')}</nav>`
+}
+
+function header(locale, t, page) {
+  const home = homeHref(locale.id)
   return `<header class="topbar">
-    <a class="chip chip--home" href="/">🏠 <span>홈</span></a>
-    <a class="brand" href="/">타로</a>
-    <button type="button" class="chip chip--browse" data-open-browse>🔍 다른 테스트 구경하기</button>
+    <a class="chip chip--home" href="${home}">🏠 <span>${esc(t.home)}</span></a>
+    <div class="brand-wrap">
+      <a class="brand" href="${home}">${esc(t.siteName)}</a>
+      ${langSwitch(locale, t, page)}
+    </div>
+    <button type="button" class="chip chip--browse" data-open-browse>🔍 ${esc(t.browse)}</button>
   </header>`
 }
 
-function footer() {
+function footer(locale, t) {
+  const prefix = locale.prefix
   return `<footer class="site-footer">
-    <p>타로 · ${esc(site.domain)}</p>
-    <p>재미로 보는 테스트다. 결과는 내일 아침이면 효력 없음.</p>
-    <nav class="site-footer__links" aria-label="안내">
-      <a href="/about.html">어바웃</a>
-      <a href="/privacy.html">개인정보 처리방침</a>
-      <a href="/terms.html">이용약관</a>
+    <p>${esc(t.siteName)} · ${esc(site.domain)}</p>
+    <p>${esc(t.footerNote)}</p>
+    <nav class="site-footer__links" aria-label="${esc(t.footerNav)}">
+      <a href="${prefix}/about.html">${esc(t.about)}</a>
+      <a href="${prefix}/privacy.html">${esc(t.privacy)}</a>
+      <a href="${prefix}/terms.html">${esc(t.terms)}</a>
     </nav>
-    <p>글꼴 Gmarket Sans · Gmarket</p>
+    <p>${esc(t.fontCredit)}</p>
   </footer>`
 }
 
-function sheet(currentId) {
-  const items = [...quizzes].sort((a, b) => b.hot - a.hot)
-  const list = items
+function sheet(list, locale, t, currentId) {
+  const items = [...list].sort((a, b) => b.hot - a.hot)
+  const rows = items
     .map((quiz) => {
       const current = quiz.id === currentId ? ` aria-current="page"` : ""
-      const here = quiz.id === currentId ? " · 지금 여기" : ""
-      const label = quiz.tags.map((id) => `#${esc(tagLabel(id))}`).join(" ")
-      return `<li><a href="${quizHref(quiz)}"${current}><span class="sheet__emoji">${quiz.emoji}</span><span class="sheet__title">${esc(quiz.title)}${here}</span><span>${esc(kindLabel(quiz))} · ${label}</span></a></li>`
+      const here = quiz.id === currentId ? t.here : ""
+      const label = quiz.tags.map((id) => `#${esc(tagLabel(id, locale.id))}`).join(" ")
+      return `<li><a href="${quizHref(quiz, locale.id)}"${current}><span class="sheet__emoji">${quiz.emoji}</span><span class="sheet__title">${esc(quiz.title)}${here}</span><span>${esc(kindLabel(quiz, locale.id))} · ${label}</span></a></li>`
     })
     .join("")
   return `<div class="sheet" data-browse hidden>
     <div class="sheet__backdrop" data-close-browse></div>
     <div class="sheet__panel" role="dialog" aria-modal="true" aria-labelledby="browse-title">
       <div class="sheet__head">
-        <h2 id="browse-title">다른 테스트 구경하기</h2>
-        <button type="button" class="chip" data-close-browse>닫기</button>
+        <h2 id="browse-title">${esc(t.browse)}</h2>
+        <button type="button" class="chip" data-close-browse>${esc(t.close)}</button>
       </div>
-      <ul class="sheet__list">${list}</ul>
+      <ul class="sheet__list">${rows}</ul>
     </div>
   </div>`
 }
 
-function shell({ title, description, path, image, script, json, main, banner = "", currentId = "", robots = "" }) {
+function shell({ locale, t, title, description, path, image, script, json, main, banner = "", currentId = "", robots = "", page }) {
   const canonical = `${site.url}${path}`
   const imageUrl = `${site.url}${image}`
   const robotMeta = robots ? `<meta name="robots" content="${esc(robots)}" />` : ""
   const data = json ? `<script type="application/json" id="${json.id}">${json.body}</script>` : ""
+  const siteCopy = `<script type="application/json" id="site-copy">${JSON.stringify(t.client).replaceAll("<", "\\u003c")}</script>`
+  const alternates = alternateLinks(page)
+  const list = quizzesByLocale[locale.id]
   return `<!doctype html>
-<html lang="ko">
+<html lang="${locale.htmlLang}">
 <head>
 <!-- Google tag (gtag.js) -->
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-318MMGWL1K"></script>
@@ -248,9 +354,9 @@ function shell({ title, description, path, image, script, json, main, banner = "
   <title>${esc(title)}</title>
   <meta name="description" content="${esc(description)}" />
   ${robotMeta}
-  <link rel="canonical" href="${esc(canonical)}" />
-  <meta property="og:locale" content="ko_KR" />
-  <meta property="og:site_name" content="${esc(site.name)}" />
+  <link rel="canonical" href="${esc(canonical)}" />${alternates ? `\n  ${alternates}` : ""}
+  <meta property="og:locale" content="${locale.ogLocale}" />
+  <meta property="og:site_name" content="${esc(t.siteName)}" />
   <meta property="og:type" content="website" />
   <meta property="og:title" content="${esc(title)}" />
   <meta property="og:description" content="${esc(description)}" />
@@ -265,15 +371,16 @@ function shell({ title, description, path, image, script, json, main, banner = "
   <style>body{margin:0;background:#ffe566;color:#141414}</style>
 </head>
 <body>
-  <a class="skip" href="#content">본문으로</a>
-  ${header()}
+  <a class="skip" href="#content">${esc(t.skip)}</a>
+  ${header(locale, t, page)}
   ${banner}
   <main id="content" class="wrap">
     ${main}
   </main>
-  ${footer()}
-  ${sheet(currentId)}
+  ${footer(locale, t)}
+  ${sheet(list, locale, t, currentId)}
   <div class="toast" data-toast role="status"></div>
+  ${siteCopy}
   ${data}
   <script type="module" src="${script}"></script>
 </body>
@@ -287,297 +394,300 @@ function saveImage(svg, name) {
   return file
 }
 
+function posterName(locale, name) {
+  return locale.id === defaultLocale ? name : `${locale.id}-${name}`
+}
+
+function homeFile(locale) {
+  return locale.prefix ? join(root, locale.prefix.slice(1), "index.html") : join(root, "index.html")
+}
+
 emptyDir(join(root, "public/og"))
 emptyDir(join(root, "quiz"))
 emptyDir(join(root, "result"))
+for (const locale of locales) {
+  if (!locale.prefix) continue
+  const folder = locale.prefix.replace(/^\//, "")
+  emptyDir(join(root, folder, "quiz"))
+  emptyDir(join(root, folder, "result"))
+}
 
-const homeSvg = poster({
-  kicker: "입장",
-  corner: "B급 인증",
-  lines: [site.name],
-  size: 140,
-  firstY: 280,
-  blurbLines: wrapByWidth(site.tagline, 18),
-  blurbY: 360,
-})
-const homeImage = saveImage(homeSvg, "home")
+const routes = []
+function addRoute(path, page) {
+  routes.push({ path, page })
+}
 
-const pages = ["/", "/404.html"]
-
-for (const quiz of quizzes) {
-  const quizLines = wrapTitle(quiz.title, 11)
-  const quizSize = quizLines.length > 1 ? 58 : 72
-  const quizImage = saveImage(
+for (const locale of locales) {
+  const list = quizzesByLocale[locale.id]
+  const t = copyFor(locale.id)
+  const homeImage = saveImage(
     poster({
-      kicker: quiz.kind === "worldcup" ? "월드컵" : "퀴즈",
-      corner: kindLabel(quiz),
-      lines: quizLines,
-      size: quizSize,
-      firstY: quizLines.length > 1 ? 250 : 280,
-      blurbLines: wrapByWidth(quiz.blurb, 24).slice(0, 2),
-      blurbY: quizLines.length > 1 ? 400 : 360,
+      kicker: t.kickerHome,
+      corner: t.cornerHome,
+      lines: [t.siteName],
+      size: 140,
+      firstY: 280,
+      blurbLines: wrapByWidth(t.tagline, lineMax(t.tagline, 18)),
+      blurbY: 360,
     }),
-    `quiz-${quiz.id}-${hash(quiz.title + quiz.blurb)}`,
+    posterName(locale, "home"),
   )
-  pages.push(quizHref(quiz))
 
-  const tagHtml = quiz.tags.map((id) => `<span>#${esc(tagLabel(id))}</span>`).join("")
-  const play = `<article class="play">
-    <p class="kicker tag-row">${tagHtml}<span>${esc(kindLabel(quiz))}</span></p>
+  addRoute(homeHref(locale.id), { type: "home" })
+  addRoute(`${locale.prefix}/404.html`, { type: "miss" })
+
+  for (const quiz of list) {
+    const quizLines = wrapTitle(quiz.title, 11)
+    const quizLayout = quizPosterLayout(quizLines)
+    const quizImage = saveImage(
+      poster({
+        kicker: quiz.kind === "worldcup" ? t.kickerCup : t.kickerQuiz,
+        corner: fitCorner(kindLabel(quiz, locale.id)),
+        lines: quizLines,
+        size: quizLayout.size,
+        firstY: quizLayout.firstY,
+        blurbLines: wrapByWidth(quiz.blurb, lineMax(quiz.blurb, 24)).slice(0, 2),
+        blurbY: quizLayout.blurbY,
+      }),
+      posterName(locale, `quiz-${quiz.id}-${hash(quiz.title + quiz.blurb)}`),
+    )
+    const quizPath = quizHref(quiz, locale.id)
+    addRoute(quizPath, { type: "quiz", id: quiz.id })
+
+    const tagHtml = quiz.tags.map((id) => `<span>#${esc(tagLabel(id, locale.id))}</span>`).join("")
+    const unverified = t.unverified ? `\n    <p class="unverified">${esc(t.unverified)}</p>` : ""
+    const play = `<article class="play">
+    <p class="kicker tag-row">${tagHtml}<span>${esc(kindLabel(quiz, locale.id))}</span></p>
     <h1>${esc(quiz.title)}</h1>
-    <p class="lede">${esc(quiz.blurb)}</p>
+    <p class="lede">${esc(quiz.blurb)}</p>${unverified}
     <div id="stage" class="stage" aria-live="polite">
-      <p>질문을 준비하고 있어요.</p>
+      <p>${esc(t.preparing)}</p>
     </div>
-    <p class="fineprint"><button type="button" class="text-button" id="restart">처음부터 다시</button></p>
+    <p class="fineprint"><button type="button" class="text-button" id="restart">${esc(t.restart)}</button></p>
   </article>`
 
-  if (quiz.kind === "quiz") {
-    const payload = {
-      id: quiz.id,
-      questions: quiz.questions,
-      results: quiz.results.map((result) => ({ id: result.id, ...resultBounds(result) })),
+    if (quiz.kind === "quiz") {
+      const payload = {
+        id: quiz.id,
+        prefix: locale.prefix,
+        missingResult: t.missingResult,
+        questions: quiz.questions,
+        results: quiz.results.map((result) => ({ id: result.id, ...resultBounds(result) })),
+      }
+      write(
+        out(quizPath),
+        shell({
+          locale,
+          t,
+          title: `${quiz.title} | ${t.siteName}`,
+          description: quiz.blurb,
+          path: quizPath,
+          image: quizImage,
+          script: "/src/quiz.js",
+          currentId: quiz.id,
+          page: { type: "quiz", id: quiz.id },
+          json: { id: "quiz-data", body: JSON.stringify(payload).replaceAll("<", "\\u003c") },
+          main: play,
+        }),
+      )
+    } else {
+      const payload = {
+        id: quiz.id,
+        prefix: locale.prefix,
+        prompt: t.cupPrompt,
+        finalRound: t.cupFinal,
+        roundTemplate: t.cupRoundTemplate,
+        fighters: quiz.fighters.map(({ id, emoji, name, tease }) => ({ id, emoji, name, tease })),
+      }
+      write(
+        out(quizPath),
+        shell({
+          locale,
+          t,
+          title: `${quiz.title} | ${t.siteName}`,
+          description: quiz.blurb,
+          path: quizPath,
+          image: quizImage,
+          script: "/src/worldcup.js",
+          currentId: quiz.id,
+          page: { type: "quiz", id: quiz.id },
+          json: { id: "cup-data", body: JSON.stringify(payload).replaceAll("<", "\\u003c") },
+          main: play,
+        }),
+      )
     }
-    write(
-      out(quizHref(quiz)),
-      shell({
-        title: `${quiz.title} | 타로`,
-        description: quiz.blurb,
-        path: quizHref(quiz),
-        image: quizImage,
-        script: "/src/quiz.js",
-        currentId: quiz.id,
-        json: { id: "quiz-data", body: JSON.stringify(payload).replaceAll("<", "\\u003c") },
-        main: play,
-      }),
-    )
-  } else {
-    const payload = {
-      id: quiz.id,
-      fighters: quiz.fighters.map(({ id, emoji, name, tease }) => ({ id, emoji, name, tease })),
-    }
-    write(
-      out(quizHref(quiz)),
-      shell({
-        title: `${quiz.title} | 타로`,
-        description: quiz.blurb,
-        path: quizHref(quiz),
-        image: quizImage,
-        script: "/src/worldcup.js",
-        currentId: quiz.id,
-        json: { id: "cup-data", body: JSON.stringify(payload).replaceAll("<", "\\u003c") },
-        main: play,
-      }),
-    )
-  }
 
-  for (const result of resultsOf(quiz)) {
-    const lines = wrapTitle(result.title, 10)
-    const size = lines.length > 1 ? 58 : 76
-    const image = saveImage(
-      poster({
-        kicker: "결과",
-        corner: quiz.title,
-        lines,
-        size,
-        firstY: lines.length > 1 ? 236 : 286,
-        meter: result.meter,
-      }),
-      `${quiz.id}-${result.id}-${hash(result.title + result.meter + result.comment)}`,
-    )
-    const href = resultHref(quiz, result)
-    pages.push(href)
-    const shareTitle = `${result.title} — ${quiz.title}`
-    const shareText = `[타로] ${quiz.title}\n내 결과는 「${result.title}」.\n너도 해봐.`
-    const actions = `<div class="actions">
-      <button type="button" class="b-class-button" data-share="kakao" data-path="${href}" data-title="${esc(shareTitle)}" data-text="${esc(shareText)}" data-image="${image}">🔗 카카오톡으로 공유</button>
-      <button type="button" class="b-class-button" data-share="link" data-path="${href}" data-title="${esc(shareTitle)}" data-text="${esc(shareText)}" data-image="${image}">🔗 링크 공유하기</button>
-      <a class="b-class-button" href="${quizHref(quiz)}">🔄 다시 하기</a>
+    for (const result of resultsOf(quiz)) {
+      const lines = wrapTitle(result.title, 10)
+      const layout = resultPosterLayout(lines)
+      const image = saveImage(
+        poster({
+          kicker: t.kickerResult,
+          corner: fitCorner(quiz.title),
+          lines,
+          size: layout.size,
+          firstY: layout.firstY,
+          meter: result.meter,
+        }),
+        posterName(locale, `${quiz.id}-${result.id}-${hash(result.title + result.meter + result.comment)}`),
+      )
+      const href = resultHref(quiz, result, locale.id)
+      addRoute(href, { type: "result", id: quiz.id, resultId: result.id })
+      const shareTitle = `${result.title} — ${quiz.title}`
+      const shareText = t.shareText(quiz.title, result.title)
+      const actions = `<div class="actions">
+      <button type="button" class="b-class-button" data-share="kakao" data-path="${href}" data-title="${esc(shareTitle)}" data-text="${esc(shareText)}" data-image="${image}">🔗 ${esc(t.shareKakao)}</button>
+      <button type="button" class="b-class-button" data-share="link" data-path="${href}" data-title="${esc(shareTitle)}" data-text="${esc(shareText)}" data-image="${image}">🔗 ${esc(t.shareLink)}</button>
+      <a class="b-class-button" href="${quizHref(quiz, locale.id)}">🔄 ${esc(t.retry)}</a>
     </div>`
-    const more = `<section class="more">
-      <h2>⚡ 다른 재미있는 테스트 더보기</h2>
-      <div class="more__grid">${relatedTo(quiz).map((item) => card(item)).join("")}</div>
+      const related = relatedTo(quiz, list)
+      const more = related.length
+        ? `<section class="more">
+      <h2>⚡ ${esc(t.more)}</h2>
+      <div class="more__grid">${related.map((item) => card(item, list, locale, t)).join("")}</div>
     </section>`
-    const main = `<article class="result-layout">
+        : ""
+      const resultBadge = t.unverified ? `\n          <p class="unverified">${esc(t.unverified)}</p>` : ""
+      const main = `<article class="result-layout">
       <article class="result-card">
         <img src="${image}" alt="" width="1200" height="630" />
         <div class="result-card__body">
-          <p class="stamp stamp--result">🎯 최종 결과</p>
-          <p class="kicker"><a href="${quizHref(quiz)}">${esc(quiz.title)}</a></p>
+          <p class="stamp stamp--result">🎯 ${esc(t.finalResult)}</p>
+          <p class="kicker"><a href="${quizHref(quiz, locale.id)}">${esc(quiz.title)}</a></p>
           <h1>${esc(result.title)}</h1>
           <p class="meter">${esc(result.meter)}</p>
           <p class="summary">${esc(result.summary)}</p>
           <div class="comment">
-            <p class="comment__label">한 줄 코멘트</p>
+            <p class="comment__label">${esc(t.commentLabel)}</p>
             <p>${esc(result.comment)}</p>
-          </div>
+          </div>${resultBadge}
         </div>
       </article>
       ${actions}
       ${more}
     </article>`
+      write(
+        out(href),
+        shell({
+          locale,
+          t,
+          title: `${shareTitle} | ${t.siteName}`,
+          description: result.comment,
+          path: href,
+          image,
+          script: "/src/page.js",
+          currentId: quiz.id,
+          page: { type: "result", id: quiz.id, resultId: result.id },
+          main,
+        }),
+      )
+    }
+  }
+
+  const byHot = [...list].sort((a, b) => b.hot - a.hot)
+  const newestId = byHot.length ? [...list].sort((a, b) => b.published.localeCompare(a.published))[0].id : ""
+  const popularIds = new Set(byHot.slice(0, 2).map((quiz) => quiz.id))
+  const gallery = byHot
+    .map((quiz) => {
+      const stamps = []
+      if (popularIds.has(quiz.id)) stamps.push(t.stampHot)
+      if (quiz.id === newestId) stamps.push(t.stampNew)
+      return card(quiz, list, locale, t, { feature: quiz.id === byHot[0].id, stamps })
+    })
+    .join("")
+  const tagButtons = [
+    `<button type="button" class="tag-button" data-tag="all" aria-pressed="true">${esc(t.tagAll)}</button>`,
+    ...tags.map(
+      (tag) =>
+        `<button type="button" class="tag-button" data-tag="${tag.id}" aria-pressed="false">#${esc(tagLabel(tag.id, locale.id))}</button>`,
+    ),
+  ].join("")
+  const heroBadge = t.unverified ? `\n      <p class="unverified">${esc(t.unverified)}</p>` : ""
+  const home = shell({
+    locale,
+    t,
+    title: t.homeTitle,
+    description: t.homeDescription,
+    path: homeHref(locale.id),
+    image: homeImage,
+    script: "/src/home.js",
+    page: { type: "home" },
+    banner: `<div class="marquee" aria-hidden="true"><div class="marquee__track"><span>${t.ticker}</span><span>${t.ticker}</span></div></div>`,
+    main: `<section class="hero">
+    <div class="hero__card">
+      <p class="stamp stamp--blue">${esc(t.stampScience)}</p>
+      <p class="stamp stamp--pink">${esc(t.stampGrade)}</p>
+      <p class="hero__domain">${esc(site.domain)}</p>
+      <h1>${esc(t.siteName)}</h1>
+      <p class="hero__tagline">${esc(t.tagline)}</p>
+      <p class="hero__desc">${esc(t.heroDesc)}</p>${heroBadge}
+    </div>
+  </section>
+  <section>
+    <div class="section-head">
+      <h2>${esc(t.galleryTitle)}</h2>
+      <p>${esc(t.galleryDesc)}</p>
+    </div>
+    <div class="controls">
+      <div class="sorts" role="tablist" aria-label="${esc(t.sortLabel)}">
+        <button type="button" class="sort-button" role="tab" data-sort="hot" aria-selected="true">${esc(t.sortHot)}</button>
+        <button type="button" class="sort-button" role="tab" data-sort="new" aria-selected="false">${esc(t.sortNew)}</button>
+      </div>
+      <div class="tags">${tagButtons}</div>
+    </div>
+    <div class="grid" id="gallery">${gallery}</div>
+    <p id="empty" class="empty" hidden>${esc(t.empty)}</p>
+  </section>`,
+  })
+  write(homeFile(locale), home)
+
+  write(
+    out(`${locale.prefix}/404.html`),
+    shell({
+      locale,
+      t,
+      title: t.miss.title,
+      description: t.miss.description,
+      path: `${locale.prefix}/404.html`,
+      image: homeImage,
+      script: "/src/page.js",
+      robots: "noindex",
+      page: { type: "miss" },
+      main: `<section class="miss">
+      <p class="stamp stamp--result">${esc(t.miss.stamp)}</p>
+      <h1>${esc(t.miss.heading)}</h1>
+      <p>${esc(t.miss.body)}</p>
+      <div class="actions"><a class="b-class-button" href="${homeHref(locale.id)}">🏠 ${esc(t.miss.home)}</a></div>
+    </section>`,
+    }),
+  )
+
+  for (const info of t.infoPages) {
+    const path = `${locale.prefix}/${info.slug}.html`
+    addRoute(path, { type: "info", slug: info.slug })
     write(
-      out(href),
+      out(path),
       shell({
-        title: `${shareTitle} | 타로`,
-        description: result.comment,
-        path: href,
-        image,
+        locale,
+        t,
+        title: info.title,
+        description: info.description,
+        path,
+        image: homeImage,
         script: "/src/page.js",
-        currentId: quiz.id,
-        main,
+        page: { type: "info", slug: info.slug },
+        main: info.main,
       }),
     )
   }
 }
 
-const byHot = [...quizzes].sort((a, b) => b.hot - a.hot)
-const newestId = [...quizzes].sort((a, b) => b.published.localeCompare(a.published))[0].id
-const popularIds = new Set(byHot.slice(0, 2).map((quiz) => quiz.id))
-const gallery = byHot
-  .map((quiz) => {
-    const stamps = []
-    if (popularIds.has(quiz.id)) stamps.push("인기")
-    if (quiz.id === newestId) stamps.push("최신")
-    return card(quiz, { feature: quiz.id === byHot[0].id, stamps })
-  })
-  .join("")
-const tagButtons = [
-  `<button type="button" class="tag-button" data-tag="all" aria-pressed="true">전체</button>`,
-  ...tags.map(
-    (tag) => `<button type="button" class="tag-button" data-tag="${tag.id}" aria-pressed="false">#${esc(tag.label)}</button>`,
-  ),
-].join("")
-const ticker = "※ 과학 아님 ※ 퀴즈는 3~5문제 ※ 결과는 내일 아침 무효 ※ 친구 단톡에 던질 것 ※ 편의점 야식은 진지하게 ※ 퇴사각은 재미로만 ※ "
-const home = shell({
-  title: "타로 — 심심하면 뇌 끄는 테스트장",
-  description: "병맛 전투력, 카톡 답장 속도, 점심 결정장애, 편의점 야식 월드컵. 퀴즈는 3~5문제, 결과는 친구에게 공유해 보세요.",
-  path: "/",
-  image: homeImage,
-  script: "/src/home.js",
-  banner: `<div class="marquee" aria-hidden="true"><div class="marquee__track"><span>${ticker}</span><span>${ticker}</span></div></div>`,
-  main: `<section class="hero">
-    <div class="hero__card">
-      <p class="stamp stamp--blue">과학 아님</p>
-      <p class="stamp stamp--pink">B급 인증</p>
-      <p class="hero__domain">${esc(site.domain)}</p>
-      <h1>타로</h1>
-      <p class="hero__tagline">${esc(site.tagline)}</p>
-      <p class="hero__desc">퀴즈는 3~5문제, 월드컵은 8강. 심심할 때 가볍게 골라 보세요.</p>
-    </div>
-  </section>
-  <section>
-    <div class="section-head">
-      <h2>테스트 진열장</h2>
-      <p>많이 하는 것부터 모아 뒀어요. 태그로 골라 보거나, 새로 나온 것부터 봐도 좋아요.</p>
-    </div>
-    <div class="controls">
-      <div class="sorts" role="tablist" aria-label="정렬">
-        <button type="button" class="sort-button" role="tab" data-sort="hot" aria-selected="true">인기</button>
-        <button type="button" class="sort-button" role="tab" data-sort="new" aria-selected="false">최신</button>
-      </div>
-      <div class="tags">${tagButtons}</div>
-    </div>
-    <div class="grid" id="gallery">${gallery}</div>
-    <p id="empty" class="empty" hidden>이 태그에는 아직 테스트가 없어요. 전체를 다시 눌러 주세요.</p>
-  </section>`,
-})
-write(join(root, "index.html"), home)
-
-write(
-  join(root, "404.html"),
-  shell({
-    title: "증발한 주소 | 타로",
-    description: "이 주소는 없다. 테스트는 홈에 있다.",
-    path: "/404.html",
-    image: homeImage,
-    script: "/src/page.js",
-    robots: "noindex",
-    main: `<section class="miss">
-      <p class="stamp stamp--result">실종</p>
-      <h1>이 주소는 장난치다 증발했다.</h1>
-      <p>테스트는 홈 진열장에 있다. 퀴즈는 3~5문제면 끝난다.</p>
-      <div class="actions"><a class="b-class-button" href="/">🏠 홈으로</a></div>
-    </section>`,
-  }),
-)
-
-const infoPages = [
-  {
-    path: "/about.html",
-    title: "어바웃 | 타로",
-    description: "타로는 마이멜로(MyMallow)가 운영하는 심심풀이 퀴즈 사이트입니다.",
-    main: `<section class="miss doc">
-      <p class="stamp stamp--result">안내</p>
-      <h1>어바웃</h1>
-      <p>타로는 마이멜로(MyMallow)가 운영하는 심심풀이 사이트입니다. 짧은 퀴즈와 월드컵으로 장난스러운 결과를 보여 주고, 그 결과를 카카오톡으로 나눠 볼 수 있습니다.</p>
-      <p>결과는 오락을 위한 것입니다. 성격, 진로, 건강, 인간관계를 판단하거나 예측하지 않습니다.</p>
-      <h2>운영</h2>
-      <p>마이멜로 (MyMallow)</p>
-      <p>문의 연락처는 이 사이트에 따로 공개되어 있지 않습니다.</p>
-    </section>`,
-  },
-  {
-    path: "/privacy.html",
-    title: "개인정보 처리방침 | 타로",
-    description: "타로는 회원가입 없이 이용하는 오락 사이트입니다. 답변은 브라우저 안에서만 계산됩니다.",
-    main: `<section class="miss doc">
-      <p class="stamp stamp--result">안내</p>
-      <h1>개인정보 처리방침</h1>
-      <p>타로는 마이멜로(MyMallow)가 운영하는 오락용 웹사이트입니다. 회원가입 없이 이용합니다. 아래는 사이트가 실제로 하는 일만 짧게 적었습니다. 2026년 11월 12일에 정리했습니다.</p>
-      <h2>수집과 저장</h2>
-      <p>퀴즈 답과 월드컵 선택은 결과 화면을 만들기 위해, 이용 중인 브라우저 안에서만 계산됩니다. 답변을 서버에 저장하지 않고, 계정도 만들지 않습니다.</p>
-      <h2>카카오톡 공유</h2>
-      <p>결과 화면에서 공유를 누르면 결과 제목, 짧은 문구, 이미지 주소, 페이지 주소가 기기의 공유 기능으로 넘어가거나 링크가 복사됩니다. 카카오톡 공유가 연결되어 있으면 같은 내용이 카카오톡 공유로 전달될 수 있습니다. 타로가 그 내용을 따로 보관하지는 않습니다.</p>
-      <h2>분석과 광고</h2>
-      <p>방문 통계를 위한 분석 도구나 광고는 넣어 두지 않았습니다.</p>
-      <h2>운영</h2>
-      <p>마이멜로 (MyMallow). 문의 연락처는 이 사이트에 따로 공개되어 있지 않습니다.</p>
-    </section>`,
-  },
-  {
-    path: "/terms.html",
-    title: "이용약관 | 타로",
-    description: "타로는 마이멜로(MyMallow)의 무료 오락 사이트입니다. 결과는 재미를 위한 것입니다.",
-    main: `<section class="miss doc">
-      <p class="stamp stamp--result">안내</p>
-      <h1>이용약관</h1>
-      <p>타로는 마이멜로(MyMallow)가 운영하는 무료 오락 사이트입니다. 퀴즈와 월드컵 결과는 재미를 위한 것이며, 사실의 판단이나 전문적인 조언이 아닙니다. 2026년 11월 12일에 정리했습니다.</p>
-      <h2>이용</h2>
-      <p>따로 가입하지 않고 볼 수 있습니다. 결과 링크를 친구에게 공유하는 것도 이용에 포함됩니다.</p>
-      <h2>결과</h2>
-      <p>결과는 언제든지 바뀌거나 내려갈 수 있습니다. 이 페이지는 법적 효력을 단정하는 계약서가 아니라, 사이트가 어떤 곳인지 알리는 안내입니다.</p>
-      <h2>운영</h2>
-      <p>마이멜로 (MyMallow). 문의 연락처는 이 사이트에 따로 공개되어 있지 않습니다.</p>
-    </section>`,
-  },
-]
-
-for (const info of infoPages) {
-  pages.push(info.path)
-  write(
-    out(info.path),
-    shell({
-      title: info.title,
-      description: info.description,
-      path: info.path,
-      image: homeImage,
-      script: "/src/page.js",
-      main: info.main,
-    }),
-  )
-}
-
-const urls = pages
-  .map((path) => `  <url><loc>${site.url}${path === "/" ? "/" : path}</loc></url>`)
-  .join("\n")
+const urls = routes.map(({ path }) => `  <url><loc>${site.url}${path}</loc></url>`).join("\n")
 write(
   join(root, "public/sitemap.xml"),
   `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urls}\n</urlset>\n`,
 )
-write(
-  join(root, "public/robots.txt"),
-  `User-agent: *\nAllow: /\n\nSitemap: ${site.url}/sitemap.xml\n`,
-)
+write(join(root, "public/robots.txt"), `User-agent: *\nAllow: /\n\nSitemap: ${site.url}/sitemap.xml\n`)
 
-console.log(`generated ${pages.length} routes, og images in public/og`)
+const counts = locales.map((locale) => `${locale.id} ${quizzesByLocale[locale.id].length}`).join(", ")
+console.log(`generated ${routes.length} routes (${counts}), og images in public/og`)

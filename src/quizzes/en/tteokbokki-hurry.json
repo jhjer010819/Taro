@@ -1,0 +1,80 @@
+{
+  "id": "tteokbokki-hurry",
+  "kind": "quiz",
+  "title": "What Your Tteokbokki Spice Level Says About Your Impatience",
+  "emoji": "🌶️",
+  "blurb": "Spicy Korean rice cakes, graded by how fast you give up waiting.",
+  "tags": ["food", "bored"],
+  "hot": 106800,
+  "published": "2026-11-20",
+  "questions": [
+    {
+      "q": "Time to pick a spice level. Tteokbokki is chewy rice cakes in gochujang, a sweet-hot pepper paste.",
+      "a": "Level 1. My tongue has a calendar.",
+      "b": "The hottest. Reading the rest of the menu is already too much waiting."
+    },
+    {
+      "q": "Toppings. Melted cheese, fish cake (eomuk), or ramyeon sari, a nest of instant noodles.",
+      "a": "I name each one and plan the melt order.",
+      "b": "All of them. The chopsticks can figure it out."
+    },
+    {
+      "q": "The pot lands. It is still very loudly steaming.",
+      "a": "I fan it with chopsticks like a person with a future.",
+      "b": "One blow, then it goes in. My tongue clocks in early."
+    },
+    {
+      "q": "Move it to a plate, or eat straight from the pot?",
+      "a": "A plate. I am here for the cheese pull.",
+      "b": "Head in the pot. Plates are for people with time."
+    },
+    {
+      "q": "There is sauce left. Bokkeumbap time: fried rice, finished in that same pan.",
+      "a": "Rice in, medium heat, every grain gets a coat.",
+      "b": "The rice hits the pan and the spoon is already moving."
+    }
+  ],
+  "results": [
+    {
+      "id": "cool-down",
+      "score": 0,
+      "title": "Steam Saint",
+      "meter": "Impatience 4",
+      "summary": "Spice, toppings, rice, all in order. You let the steam finish talking. Your friends are done. You are still on bite one.",
+      "comment": "The pot respects this pace. Nobody else does."
+    },
+    {
+      "id": "one-bite",
+      "score": 1,
+      "title": "One Wild Bite",
+      "meter": "Impatience 22",
+      "summary": "You wait for almost everything. Then one scene, the chopsticks file a complaint, and the complaint wins.",
+      "comment": "That single bite is the whole diagnosis."
+    },
+    {
+      "id": "medium",
+      "min": 2,
+      "max": 3,
+      "title": "Medium Heat",
+      "meter": "Impatience 58",
+      "summary": "You do let it cool. A little. The cheese has not even stretched and your mouth has already RSVP'd.",
+      "comment": "Your patience lasts about as long as a fish cake keeps its shape."
+    },
+    {
+      "id": "pot-first",
+      "score": 4,
+      "title": "Pot First",
+      "meter": "Impatience 86",
+      "summary": "Picking from the menu took longer than eating. Your tongue would like to schedule a meeting tomorrow.",
+      "comment": "Bokkeumbap was not a plan. It was a reflex that came with rice."
+    },
+    {
+      "id": "full-send",
+      "score": 5,
+      "title": "Full Send",
+      "meter": "Impatience 99",
+      "summary": "Hottest level, every topping, the pot, the fried rice. You skipped the waiting in all five scenes.",
+      "comment": "'Let it cool' is a language you do not speak."
+    }
+  ]
+}

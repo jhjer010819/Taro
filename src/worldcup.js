@@ -15,8 +15,8 @@ function el(tag, className, text) {
 }
 
 function roundName(size) {
-  if (size === 2) return "결승"
-  return `${size}강`
+  if (size === 2) return data.finalRound || "결승"
+  return (data.roundTemplate || "{n}강").replaceAll("{n}", String(size))
 }
 
 function render() {
@@ -24,7 +24,7 @@ function render() {
   const right = current[matchIndex * 2 + 1]
   const total = current.length / 2
   const progress = el("p", "progress", `${roundName(current.length)} · ${matchIndex + 1} / ${total}`)
-  const heading = el("h2", "question", "더 당기는 쪽을 찍어라.")
+  const heading = el("h2", "question", data.prompt || "더 당기는 쪽을 찍어라.")
   const choices = el("div", "choices")
   for (const fighter of [left, right]) {
     const button = el("button", "choice choice--food")
@@ -60,7 +60,7 @@ function pick(id) {
       return
     }
     if (winners.length === 1) {
-      window.location.href = `/result/result-${data.id}-${winners[0].id}.html`
+      window.location.href = `${data.prefix || ""}/result/result-${data.id}-${winners[0].id}.html`
       return
     }
     current = winners
